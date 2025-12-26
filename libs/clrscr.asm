@@ -1,5 +1,6 @@
 ; Clrscr - Lib
 ; Author: Artik Lamartik
+; Usable: clrscr
 
 clrscr:
     mov ax, 0x03
