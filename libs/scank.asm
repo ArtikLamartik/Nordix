@@ -1,5 +1,6 @@
 ; Scank - Lib
 ; Author: Artik Lamartik
+; Usable: skank
 
 scank:
     push ax
