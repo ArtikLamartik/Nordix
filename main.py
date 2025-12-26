@@ -1,6 +1,7 @@
 import subprocess
 import os
 
+subprocess.run(['mkdir', '-p', './build'], check=True)
 subprocess.run(['nasm', '-f', 'bin', './src/boot.asm', '-o', './build/boot.bin'], check=True)
 subprocess.run(['nasm', '-f', 'bin', './src/kernel.asm', '-o', './build/kernel.bin'], check=True)
 
