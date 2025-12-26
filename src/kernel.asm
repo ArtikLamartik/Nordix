@@ -5,28 +5,61 @@ start:
     mov ax, 0x00
     mov ds, ax
     mov es, ax
+
     call clrscr
-    mov si, msg
+
+    call kalloc_init
+
+    mov si, msg1
     call printk
     mov si, msg2
     call printk
-    mov di, input_buffer
+
+    mov bx, 0
+    call kmalloc
+    jc alloc_failed
+
+    mov di, ax
     call scank
-    mov si, msg4
-    call printk
+
+    mov si, di
+    call getlen
+    mov [str_len], ax
+
     mov si, msg3
     call printk
-    mov si, input_buffer
+    mov si, msg4
     call printk
+
+    mov si, di
+    call printk
+
+    mov si, msg5
+    call printk
+
+    mov ax, [str_len]
+    call printnumk
+
+    mov bx, di
+    call kfree
+
     cli
     hlt
 
-%include "libs/printk.asm"
-%include "libs/clrscr.asm"
-%include "libs/scank.asm"
+alloc_failed:
+    mov si, alloc_failed_msg
+    call printk
 
-msg db 'Hello, World Kernel!', 10, 0
-msg2 db 'Text:', 0
-msg3 db 10, 'You typed: ', 0
-msg4 db 10, '----------------', 0
-input_buffer times 1024 db 0
+%include "libs/printk.asm"
+%include "libs/clrscr.asm" 
+%include "libs/scank.asm"
+%include "libs/kalloc.asm"
+%include "libs/getlen.asm"
+
+str_len dw 0
+alloc_failed_msg db 'Memory allocation failed!', 10, 0
+msg1 db 'Hello, World Kernel!', 10, 0
+msg2 db 'Text: ', 0
+msg3 db 10, '----------------', 0
+msg4 db 10, 'You typed: ', 0
+msg5 db 10, 'Length: ', 0
