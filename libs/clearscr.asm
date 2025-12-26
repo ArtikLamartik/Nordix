@@ -1,8 +1,8 @@
-; Clrscr - Lib
+; Clearscr - Lib
 ; Author: Artik Lamartik
-; Usable: clrscr
+; Usable: clearscr
 
-clrscr:
+clearscr:
     mov ax, 0x03
     int 0x10
     mov ah, 0x02
