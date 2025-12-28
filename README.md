@@ -1,9 +1,14 @@
 # Nordix
 Nordix Kernel/OS
 
+To Assemble:
+```
+python3 Hypher.py main.hyp .
+```
+
 To Compile:
 ```
-python3 main.py
+python3 build.py
 ```
 
 To run with QEMU:
