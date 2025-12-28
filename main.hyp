@@ -1,0 +1,394 @@
+#file[src/boot.asm]
+#bits[16]
+#org[0x7C00]
+
+fn main():
+    $boot16[0x8000];
+
+$bootableid;
+
+#file[src/kernel.asm]
+%use[libs/macros.asm];
+#bits[16]
+#org[0x8000]
+[warning -zeroing]
+[warning -macro-params-multi]
+
+fn main():
+    $kinit;
+    @clrscrk();
+    @print(msg1);
+    @print(msg2);
+    @scan(input_buffer);
+    @len(input_buffer, [str_len]);
+    @print(msg3);
+    @print(msg4);
+    @print(input_buffer);
+    @print(msg5);
+    @printnum([str_len]);
+    @print(msg6);
+    $exit;
+
+let str_len:16 = 0;
+let msg1:8 = "Hello, World Kernel!", 10, 0;
+let msg2:8 = "Text: ", 0;
+let msg3:8 = 10, "----------------", 0;
+let msg4:8 = 10, "You typed: ", 0;
+let msg5:8 = 10, "Length: ", 0;
+let msg6:8 = 10, "Goodbye!", 10, 0;
+let input_buffer:8 = 255[];
+
+%use[libs/printk.asm];
+%use[libs/clrscrk.asm];
+%use[libs/scank.asm];
+%use[libs/lenk.asm];
+
+#file[libs/macros.asm]
+
+%macro print 1
+    mov si, %1
+    call printk
+%endmacro
+
+%macro printnum 1
+    mov ax, %1
+    call printnumk
+%endmacro
+
+%macro scan 1
+    mov di, %1
+    call scank
+%endmacro
+
+%macro len 2
+    mov si, %1
+    call lenk
+    mov %2, ax
+%endmacro
+
+#file[libs/printk.asm]
+
+fn printk():
+    mov al, [si]
+    inc si
+    cmp al, 0
+    je .printk_done
+    cmp al, 10
+    je .printk_newline
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    jmp printk
+fn .printk_newline():
+    mov al, 13
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    mov al, 10
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    jmp printk
+fn .printk_done():
+    ret
+
+fn printnumk():
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    test ax, ax
+    jnz .printnumk_convert_number
+    mov si, printnumk_zero_str
+    @printk();
+    jmp .printnumk_done
+    mov bx, 10
+    xor cx, cx
+
+fn .printnumk_convert_number():
+    mov bx, 10
+    xor cx, cx
+
+fn .printnumk_convert_loop():
+    xor dx, dx
+    div bx
+    add dl, '0'
+    push dx
+    inc cx
+    test ax, ax
+    jnz .printnumk_convert_loop
+
+fn .printnumk_digits():
+    pop dx
+    mov [printnumk_temp_char], dl
+    mov [printnumk_temp_char+1], byte 0
+    mov si, printnumk_temp_char
+    @printk();
+    loop .printnumk_digits
+
+fn .printnumk_done():
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+let printnumk_temp_char:8 = 0, 0, 0;
+let printnumk_zero_str:8 = "0", 0;
+
+#file[libs/clrscrk.asm]
+
+fn clrscrk():
+    mov ax, 0x03
+    int 0x10
+    mov ah, 0x02
+    mov bh, 0x00
+    mov dh, 0x00
+    mov dl, 0x00
+    int 0x10
+    ret
+
+#file[libs/scank.asm]
+
+fn scank():
+    push ax
+    push cx
+    push di
+    push si
+    push dx
+    mov si, di
+    mov cx, 0
+
+fn scank_read_loop():
+    mov ah, 0x00
+    int 0x16
+    cmp al, 0x0D
+    je scank_done
+    cmp al, 0x08
+    je scank_handle_backspace
+    cmp al, 0x00
+    je scank_handle_special_keys
+    push ax
+    push bx
+    push di
+    mov di, si
+    add di, cx
+    push cx
+    mov bx, di
+    fn scank_find_end_insert_shift():
+        cmp byte [di], 0
+        je scank_end_found_insert_shift
+        inc di
+        jmp scank_find_end_insert_shift
+    fn scank_end_found_insert_shift():
+    fn scank_shift_insert_loop_shift():
+        cmp di, bx
+        je scank_shift_insert_done_shift
+        mov al, [di - 1]
+        mov [di], al
+        dec di
+        jmp scank_shift_insert_loop_shift
+    fn scank_shift_insert_done_shift():
+    pop cx
+    pop di
+    pop bx
+    pop ax
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    push di
+    mov di, si
+    add di, cx
+    mov [di], al
+    pop di
+    inc cx
+    push di
+    push cx
+    push dx
+    mov di, si
+    add di, cx
+    mov dx, 0
+    fn scank_redraw_shift_rest():
+        mov al, [di]
+        cmp al, 0
+        je scank_redraw_shift_done
+        mov ah, 0x0E
+        mov bx, 0x07
+        int 0x10
+        inc di
+        inc dx
+        jmp scank_redraw_shift_rest
+    fn scank_redraw_shift_done():
+    fn scank_backspace_rest_shift():
+        cmp dx, 0
+        je scank_backspace_done_shift
+        mov ah, 0x0E
+        mov al, 0x08
+        mov bx, 0x07
+        int 0x10
+        dec dx
+        jmp scank_backspace_rest_shift
+    fn scank_backspace_done_shift():
+    pop dx
+    pop cx
+    pop di
+    jmp scank_read_loop
+
+fn scank_handle_special_keys():
+    cmp ah, 0x48
+    je scank_handle_up_arrow
+    cmp ah, 0x50
+    je scank_handle_down_arrow
+    cmp ah, 0x4B
+    je scank_handle_left_arrow
+    cmp ah, 0x4D
+    je scank_handle_right_arrow
+    jmp scank_read_loop
+
+fn scank_handle_left_arrow():
+    cmp cx, 0
+    jle scank_read_loop
+    dec cx
+    mov ah, 0x0E
+    mov al, 0x08
+    mov bx, 0x07
+    int 0x10
+    jmp scank_read_loop
+
+fn scank_handle_right_arrow():
+    push di
+    mov di, si
+    add di, cx
+    cmp byte [di], 0
+    je scank_right_arrow_done
+    inc cx
+    mov al, [di]
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    fn scank_right_arrow_done():
+    pop di
+    jmp scank_read_loop
+
+fn scank_handle_up_arrow():
+    cmp cx, 0
+    je scank_up_arrow_done
+    fn scank_up_arrow_loop():
+        cmp cx, 0
+        je scank_up_arrow_done
+        dec cx
+        mov ah, 0x0E
+        mov al, 0x08
+        mov bx, 0x07
+        int 0x10
+        jmp scank_up_arrow_loop
+    fn scank_up_arrow_done():
+    jmp scank_read_loop
+
+fn scank_handle_down_arrow():
+    push di
+    mov di, si
+    add di, cx
+    cmp byte [di], 0
+    je scank_down_arrow_done
+    inc cx
+    mov al, [di]
+    mov ah, 0x0E
+    mov bx, 0x07
+    int 0x10
+    pop di
+    jmp scank_handle_down_arrow
+    scank_down_arrow_done:
+    pop di
+    jmp scank_read_loop
+
+fn scank_handle_backspace():
+    cmp cx, 0
+    jle scank_read_loop
+    dec cx
+    mov ah, 0x0E
+    mov al, 0x08
+    mov bx, 0x07
+    int 0x10
+    push di
+    mov di, si
+    add di, cx
+    fn scank_shift_loop_backspace():
+        mov al, [di + 1]
+        mov [di], al
+        cmp al, 0
+        je scank_shift_done_backspace
+        inc di
+        jmp scank_shift_loop_backspace
+    fn scank_shift_done_backspace():
+    pop di
+    push di
+    push cx
+    mov di, si
+    add di, cx
+    fn scank_redraw_loop_backspace():
+        mov al, [di]
+        cmp al, 0
+        je scank_redraw_done_backspace
+        mov ah, 0x0E
+        mov bx, 0x07
+        int 0x10
+        inc di
+        jmp scank_redraw_loop_backspace
+    fn scank_redraw_done_backspace():
+    mov ah, 0x0E
+    mov al, ' '
+    mov bx, 0x07
+    int 0x10
+    pop cx
+    mov di, si
+    add di, cx
+    fn scank_reposition_loop_backspace():
+        mov al, [di]
+        cmp al, 0
+        je scank_reposition_done_backspace
+        mov ah, 0x0E
+        mov al, 0x08
+        mov bx, 0x07
+        int 0x10
+        inc di
+        jmp scank_reposition_loop_backspace
+    fn scank_reposition_done_backspace():
+    mov ah, 0x0E
+    mov al, 0x08
+    mov bx, 0x07
+    int 0x10
+    pop di
+    jmp scank_read_loop
+
+fn scank_done():
+    push di
+    mov di, si
+    add di, cx
+    mov byte [di], 0
+    pop di
+    pop dx
+    pop si
+    pop di
+    pop cx
+    pop ax
+    ret
+
+#file[libs/lenk.asm]
+
+fn lenk():
+    push si
+    xor ax, ax
+    
+fn .lenk_loop():
+    cmp byte [si], 0
+    je .lenk_done
+    inc ax
+    inc si
+    jmp .lenk_loop
+    
+fn .lenk_done():
+    pop si
+    ret
