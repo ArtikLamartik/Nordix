@@ -1,6 +1,8 @@
 # Nordix
 Nordix Kernel/OS
 
+You can find Hypher at https://github.com/ArtikLamartik/Hypher
+
 To Assemble:
 ```
 python3 Hypher.py main.hyp .
