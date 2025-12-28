@@ -3,14 +3,9 @@ Nordix Kernel/OS
 
 You can find Hypher at https://github.com/ArtikLamartik/Hypher
 
-To Assemble:
+To Build:
 ```
 python3 Hypher.py main.hyp .
-```
-
-To Compile:
-```
-python3 build.py
 ```
 
 To run with QEMU:
