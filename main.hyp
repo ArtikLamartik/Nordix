@@ -1,3 +1,6 @@
+#compile[src/boot.asm, src/kernel.asm][build]
+#bdisk[disk.img][1048576 * 10][build/boot.bin, build/kernel.bin]
+
 #file[src/boot.asm]
 #bits[16]
 #org[0x7C00]
@@ -30,7 +33,7 @@ fn main():
     $exit;
 
 let str_len:16 = 0;
-let msg1:8 = "Hello, World Kernel!", 10, 0;
+let msg1:8 = "Hello, Kernel!", 10, 0;
 let msg2:8 = "Text: ", 0;
 let msg3:8 = 10, "----------------", 0;
 let msg4:8 = 10, "You typed: ", 0;
@@ -79,6 +82,7 @@ fn printk():
     mov bx, 0x07
     int 0x10
     jmp printk
+
 fn .printk_newline():
     mov al, 13
     mov ah, 0x0E
@@ -89,6 +93,7 @@ fn .printk_newline():
     mov bx, 0x07
     int 0x10
     jmp printk
+
 fn .printk_done():
     ret
 
