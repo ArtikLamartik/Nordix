@@ -16,24 +16,25 @@ $bootableid;
 [warning -zeroing]
 [warning -macro-params-multi]
 
-%def print[1]    -> {mov si, %1\ncall printk};
-%def printnum[1] -> {mov ax, %1\ncall printnumk};
-%def scan[1]     -> {mov di, %1\ncall scank};
-%def len[2]      -> {mov si, %1\ncall lenk\nmov %2, ax};
+%def clrscrk[0]   -> {call clrscrk};
+%def printk[1]    -> {mov si, %1\n\call printk};
+%def printnumk[1] -> {mov ax, %1\n\call printnumk};
+%def scank[1]     -> {mov di, %1\n\call scank};
+%def lenk[2]      -> {mov si, %1\n\call lenk\n\mov %2, ax};
 
 fn main():
     $kinit;
     @clrscrk();
-    @print(msg1);
-    @print(msg2);
-    @scan(input_buffer);
-    @len(input_buffer, [str_len]);
-    @print(msg3);
-    @print(msg4);
-    @print(input_buffer);
-    @print(msg5);
-    @printnum([str_len]);
-    @print(msg6);
+    @printk(msg1);
+    @printk(msg2);
+    @scank(input_buffer);
+    @lenk(input_buffer, [str_len]);
+    @printk(msg3);
+    @printk(msg4);
+    @printk(input_buffer);
+    @printk(msg5);
+    @printnumk([str_len]);
+    @printk(msg6);
     $exit;
 
 let str_len:16 = 0;
@@ -87,7 +88,7 @@ fn printnumk():
     test ax, ax
     jnz .printnumk_convert_number
     mov si, printnumk_zero_str
-    @printk();
+    @printk;
     jmp .printnumk_done
     mov bx, 10
     xor cx, cx
@@ -110,7 +111,7 @@ fn .printnumk_digits():
     mov [printnumk_temp_char], dl
     mov [printnumk_temp_char+1], byte 0
     mov si, printnumk_temp_char
-    @printk();
+    @printk;
     loop .printnumk_digits
 
 fn .printnumk_done():
