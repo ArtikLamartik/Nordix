@@ -11,11 +11,15 @@ fn main():
 $bootableid;
 
 #file[src/kernel.asm]
-%use[libs/macros.asm];
 #bits[16]
 #org[0x8000]
 [warning -zeroing]
 [warning -macro-params-multi]
+
+%def[print][1][mov si, %1\ncall printk];
+%def[printnum][1][mov ax, %1\ncall printnumk];
+%def[scan][1][mov di, %1\ncall scank];
+%def[len][2][mov si, %1\ncall lenk\nmov %2, ax];
 
 fn main():
     $kinit;
@@ -39,35 +43,12 @@ let msg3:8 = 10, "----------------", 0;
 let msg4:8 = 10, "You typed: ", 0;
 let msg5:8 = 10, "Length: ", 0;
 let msg6:8 = 10, "Goodbye!", 10, 0;
-let input_buffer:8 = 255[];
+let input_buffer:8 = 25[0];
 
 %use[libs/printk.asm];
 %use[libs/clrscrk.asm];
 %use[libs/scank.asm];
 %use[libs/lenk.asm];
-
-#file[libs/macros.asm]
-
-%macro print 1
-    mov si, %1
-    call printk
-%endmacro
-
-%macro printnum 1
-    mov ax, %1
-    call printnumk
-%endmacro
-
-%macro scan 1
-    mov di, %1
-    call scank
-%endmacro
-
-%macro len 2
-    mov si, %1
-    call lenk
-    mov %2, ax
-%endmacro
 
 #file[libs/printk.asm]
 
