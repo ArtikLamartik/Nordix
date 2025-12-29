@@ -16,10 +16,10 @@ $bootableid;
 [warning -zeroing]
 [warning -macro-params-multi]
 
-%def[print][1][mov si, %1\ncall printk];
-%def[printnum][1][mov ax, %1\ncall printnumk];
-%def[scan][1][mov di, %1\ncall scank];
-%def[len][2][mov si, %1\ncall lenk\nmov %2, ax];
+%def print[1]    -> {mov si, %1\ncall printk};
+%def printnum[1] -> {mov ax, %1\ncall printnumk};
+%def scan[1]     -> {mov di, %1\ncall scank};
+%def len[2]      -> {mov si, %1\ncall lenk\nmov %2, ax};
 
 fn main():
     $kinit;
