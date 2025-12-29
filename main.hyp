@@ -43,7 +43,7 @@ let msg3:8 = 10, "----------------", 0;
 let msg4:8 = 10, "You typed: ", 0;
 let msg5:8 = 10, "Length: ", 0;
 let msg6:8 = 10, "Goodbye!", 10, 0;
-let input_buffer:8 = 25[0];
+let input_buffer:8 = 255[0];
 
 %use[libs/printk.asm];
 %use[libs/clrscrk.asm];
