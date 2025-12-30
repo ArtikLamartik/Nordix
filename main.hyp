@@ -34,7 +34,13 @@ fn main():
     @printk(input_buffer);
     @printk(msg5);
     @printnumk([str_len]);
-    @printk(msg6);
+    mov ax, [str_len]
+    if (ax >= 0x0A):
+        @printk(msg6);
+    else:
+        @printk(newline);
+    endif;
+    @printk(msg7);
     $exit;
 
 let str_len:16 = 0;
@@ -43,7 +49,9 @@ let msg2:8 = "Text: ", 0;
 let msg3:8 = 10, "----------------", 0;
 let msg4:8 = 10, "You typed: ", 0;
 let msg5:8 = 10, "Length: ", 0;
-let msg6:8 = 10, "Goodbye!", 10, 0;
+let msg6:8 = 10, "You found this!", 10, 0;
+let msg7:8 = "Goodbye!", 10, 0;
+let newline:8 = 10, 0;
 let input_buffer:8 = 255[0];
 
 %use[libs/printk.asm];
